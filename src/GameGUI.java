@@ -1,12 +1,16 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
+
 public class GameGUI extends JFrame implements Resettable, Displayable {
     private Board board;
     private PlayerManager playerManager;
     private JButton[][] buttons;
     private int clickCount = 0;
     private int fromRow, fromCol;
+    private ArrayList<String> results = new ArrayList<>();
+    private int gameCount = 0;
 
     public GameGUI() {
         board = new Board();
@@ -15,14 +19,13 @@ public class GameGUI extends JFrame implements Resettable, Displayable {
     }
 
     public void initializeUI() {
-        setTitle(" XO Game");
+        setTitle("XO Game");
         setSize(400, 400);
         setLayout(new GridLayout(3, 3));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        // تغییر پس زمینه به سیاه و مرکزیت صفحه
         getContentPane().setBackground(Color.BLACK);
-        setLocationRelativeTo(null);  // مرکز کردن پنجره در صفحه نمایش
+        setLocationRelativeTo(null);
 
         buttons = new JButton[3][3];
 
@@ -32,8 +35,8 @@ public class GameGUI extends JFrame implements Resettable, Displayable {
                 final int col = j;
                 buttons[i][j] = new JButton("");
                 buttons[i][j].setFont(new Font("Arial", Font.BOLD, 40));
-                buttons[i][j].setBackground(Color.WHITE);  // پس‌زمینه سفید برای دکمه‌ها
-                buttons[i][j].setForeground(Color.BLACK);  // رنگ متن پیش‌فرض سیاه
+                buttons[i][j].setBackground(Color.WHITE);
+                buttons[i][j].setForeground(Color.BLACK);
                 buttons[i][j].addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
                         handleMove(row, col);
@@ -55,7 +58,6 @@ public class GameGUI extends JFrame implements Resettable, Displayable {
                 board.setCell(row, col, symbol);
                 buttons[row][col].setText(symbol);
 
-                // تغییر رنگ مهره‌ها: قرمز برای ایکس و آبی برای او
                 if (symbol.equals("X")) {
                     buttons[row][col].setForeground(Color.RED);
                 } else if (symbol.equals("O")) {
@@ -64,11 +66,13 @@ public class GameGUI extends JFrame implements Resettable, Displayable {
 
                 currentPlayer.incrementPlaced();
                 if (board.checkWinner(symbol)) {
+                    results.add(symbol);
                     displayMessage(symbol + " wins!");
                     resetGame();
                     return;
                 }
                 if (board.isFull()) {
+                    results.add("Draw");
                     displayMessage("Draw!");
                     resetGame();
                     return;
@@ -91,7 +95,6 @@ public class GameGUI extends JFrame implements Resettable, Displayable {
                     buttons[fromRow][fromCol].setText("");
                     buttons[row][col].setText(symbol);
 
-                    // تغییر رنگ مهره‌ها: قرمز برای ایکس و آبی برای او
                     if (symbol.equals("X")) {
                         buttons[row][col].setForeground(Color.RED);
                     } else if (symbol.equals("O")) {
@@ -99,6 +102,7 @@ public class GameGUI extends JFrame implements Resettable, Displayable {
                     }
 
                     if (board.checkWinner(symbol)) {
+                        results.add(symbol);
                         displayMessage(symbol + " wins!");
                         resetGame();
                         return;
@@ -119,12 +123,48 @@ public class GameGUI extends JFrame implements Resettable, Displayable {
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
                 buttons[i][j].setText("");
-                buttons[i][j].setForeground(Color.BLACK); // برگشتن به رنگ پیش‌فرض
+                buttons[i][j].setForeground(Color.BLACK);
             }
+        }
+
+        gameCount++;
+
+        if (gameCount == 5) {
+            showFinalResult();
         }
     }
 
     public void displayMessage(String message) {
         JOptionPane.showMessageDialog(this, message);
+    }
+
+    public void showFinalResult() {
+        int xWins = 0;
+        int oWins = 0;
+        int draws = 0;
+
+        for (String result : results) {
+            if (result.equals("X")) {
+                xWins++;
+            } else if (result.equals("O")) {
+                oWins++;
+            } else if (result.equals("Draw")) {
+                draws++;
+            }
+        }
+
+        String winner;
+        if (xWins > oWins) {
+            winner = "X is the overall winner!";
+        } else if (oWins > xWins) {
+            winner = "O is the overall winner!";
+        } else {
+            winner = "It's a tie!";
+        }
+
+        JOptionPane.showMessageDialog(this,
+                "Game Over!\n\nX wins: " + xWins + "\nO wins: " + oWins + "\nDraws: " + draws + "\n\n" + winner);
+
+        System.exit(0);
     }
 }
